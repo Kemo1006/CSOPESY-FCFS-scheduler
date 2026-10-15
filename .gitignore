@@ -1,0 +1,6 @@
+build/
+logs/
+*.exe
+.vs/
+cmake-build-*/
+*.zip
