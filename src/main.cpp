@@ -48,12 +48,31 @@ int main() {
     scheduler.stop();
 
 #ifdef _WIN32
-    // Bundle the log files for submission (written next to the executable's working dir).
-    std::string cmd = std::string("powershell -NoProfile -Command \"Compress-Archive -Path '") +
-                      kLogDir + "\\*.txt' -DestinationPath 'logs.zip' -Force -ErrorAction Stop\"";
-    if (std::system(cmd.c_str()) == 0 && std::filesystem::exists("logs.zip")) {
-        std::cout << "Logs zipped to logs.zip\n";
+
+    const char* systemRoot = std::getenv("SystemRoot");
+
+    std::filesystem::path powershellPath =
+        std::filesystem::path(systemRoot ? systemRoot : "C:\\Windows") /
+        "System32" / "WindowsPowerShell" / "v1.0" / "powershell.exe";
+
+    if (std::filesystem::exists(powershellPath)) {
+
+        std::string command =
+            powershellPath.string() +
+            " -NoProfile -NonInteractive -Command "
+            "Compress-Archive -Path logs\\*.txt "
+            "-DestinationPath logs.zip -Force -ErrorAction Stop";
+
+        int result = std::system(command.c_str());
+
+        if (result == 0 && std::filesystem::exists("logs.zip")) {
+            std::cout << "Logs zipped to logs.zip\n";
+        } else {
+            std::cout << "Failed to create logs.zip\n";
+        }
+
     } else {
+        std::cout << "PowerShell executable not found.\n";
         std::cout << "Failed to create logs.zip\n";
     }
 #endif
